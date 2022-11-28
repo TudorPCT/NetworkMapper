@@ -11,6 +11,21 @@ def default_ip_list():
     return ports
 
 
+def check_for_connection(ip, port, port_regex, port_dict, is_first=True):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    if port_regex.match(str(port)) and s.connect_ex((ip, port)) == 0:
+        padding = len(ip + str(port) + port_dict.get(port)) + 3 if port_dict.get(port) is not None \
+            else len(ip + str(port)) + 1
+        output = "{}:{}({})".format(ip, port, port_dict[port]) if port in port_dict.keys() and is_first \
+            else "{}:{}".format(ip, port) if is_first \
+            else (":{}({})".format(str(port), port_dict[port])).rjust(padding) if port in port_dict.keys() \
+            else ":{}".format(str(port)).rjust(padding)
+
+        print(output)
+        is_first = False
+    s.close()
+
+
 def network_mapper(cidr_class, port_list=None):
     ip_list = convert_cidr(cidr_class)
     port_dict = default_ip_list()
@@ -20,20 +35,9 @@ def network_mapper(cidr_class, port_list=None):
     for ip in ip_list:
         is_first = True
         for index, port in enumerate(port_list):
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if type(port) == str:
                 port = int(port)
-            if port_regex.match(str(port)) and s.connect_ex((ip, port)) == 0:
-                padding = len(ip+str(port)+port_dict.get(port)) + 3 if port_dict.get(port) is not None \
-                    else len(ip+str(port)) + 1
-                output = "{}:{}({})".format(ip, port, port_dict[port]) if port in port_dict.keys() and is_first \
-                    else "{}:{}".format(ip, port) if is_first \
-                    else (":{}({})".format(str(port), port_dict[port])).rjust(padding) if port in port_dict.keys()\
-                    else ":{}".format(str(port)).rjust(padding)
-
-                print(output)
-                is_first = False
-            s.close()
+            check_for_connection(ip, port, port_regex, port_dict, is_first)
 
 
 def is_cidr_ip_class(cidr_ip_class):
