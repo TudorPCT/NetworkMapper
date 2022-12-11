@@ -13,6 +13,7 @@ def default_ip_list():
 
 def check_for_connection(ip, port, port_regex, port_dict, is_first=True):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1)
     if port_regex.match(str(port)) and s.connect_ex((ip, port)) == 0:
         padding = len(ip + str(port) + port_dict.get(port)) + 3 if port_dict.get(port) is not None \
             else len(ip + str(port)) + 1
